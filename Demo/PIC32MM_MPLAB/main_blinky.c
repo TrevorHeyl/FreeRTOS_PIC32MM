@@ -173,7 +173,7 @@ static void pTaskFlashBlue_1Hz( void *pvParameters )
 {  
 	for( ;; )
 	{
-		DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
+        DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
         vTaskDelay(500);           
 	}
 }
