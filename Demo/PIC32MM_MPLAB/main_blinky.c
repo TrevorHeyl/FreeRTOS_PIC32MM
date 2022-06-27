@@ -93,15 +93,15 @@ static QueueHandle_t xQueue = NULL;
  */
 void main_example_simple_task (void ){
     
-        xTaskCreate( pTaskFlashBlue_1Hz,                           /* The function that implements the task. */
-					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
-					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
-					( void * ) NULL,                        /* The parameter passed to the task  */
-					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
-					NULL  );									/* . */
+    xTaskCreate( pTaskFlashBlue_1Hz,                           /* The function that implements the task. */
+		"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+		MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+		( void * ) NULL,                        /* The parameter passed to the task  */
+		TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+		NULL  );									/* . */
 
-		/* Start the task */
-		vTaskStartScheduler();
+	/* Start the task */
+	vTaskStartScheduler();
 	
 }
 
@@ -156,28 +156,25 @@ void main_example_interrupt(void) {
  */
 void main_example_static_task (void ){
     
-        xTaskCreateStatic( pTaskFlashBlue_1Hz,                           /* The function that implements the task. */
-					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
-					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
-					( void * ) NULL,                        /* The parameter passed to the task  */
-					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
-					 xStackBlue ,&xTaskBlueBuffer  );		/* Task control block and stack memory */
+    xTaskCreateStatic( pTaskFlashBlue_1Hz,                           /* The function that implements the task. */
+		"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+		MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+		( void * ) NULL,                        /* The parameter passed to the task  */
+		TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+		 xStackBlue ,&xTaskBlueBuffer  );		/* Task control block and stack memory */
 
 		/* Start the task */
-		vTaskStartScheduler();
+	vTaskStartScheduler();
 	
 }
 
 
 static void pTaskFlashBlue_1Hz( void *pvParameters )
-{
-
-    
+{  
 	for( ;; )
 	{
-			DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
-            vTaskDelay(500);
-            
+		DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
+        vTaskDelay(500);           
 	}
 }
 
