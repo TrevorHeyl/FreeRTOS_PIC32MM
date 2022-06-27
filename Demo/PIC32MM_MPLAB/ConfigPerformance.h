@@ -70,6 +70,7 @@
 #ifndef CONFIG_PERFORMANCE_H
 #define CONFIG_PERFORMANCE_H
 
+
 /*
  * Configures the hardware for maximum performance by setting the speed of the
  * peripheral bus and enabling the cache.

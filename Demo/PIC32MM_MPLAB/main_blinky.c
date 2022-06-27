@@ -47,16 +47,15 @@ converted to ticks using the portTICK_PERIOD_MS constant. */
 
 #define MINIMAL_TASK_STACK_SIZE 200
 
-StaticTask_t xTaskBlueBuffer;
-StackType_t  xStackBlue[MINIMAL_TASK_STACK_SIZE];
-
 
 /*
  * The tasks as described in the comments at the top of this file.
  */
-static void pTaskFlashBlue_1Hz( void *pvParameters );
-static void pTaskFlashRed_0_5Hz( void *pvParameters );
+static void pTaskFlashRed_2Hz( void *pvParameters );
+static void pTaskFlashBlue_0_5Hz( void *pvParameters );
 static void pTaskCheckTamper( void *pvParameters );
+static void pFToggleGreenLED( TimerHandle_t xTimer );
+
 
 
 
@@ -93,7 +92,9 @@ static QueueHandle_t xQueue = NULL;
  */
 void main_example_simple_task (void ){
     
-    xTaskCreate( pTaskFlashBlue_1Hz,                           /* The function that implements the task. */
+    DemoBoardLedInitialise();
+    
+    xTaskCreate( pTaskFlashBlue_0_5Hz,                           /* The function that implements the task. */
 		"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 		MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
 		( void * ) NULL,                        /* The parameter passed to the task  */
@@ -113,13 +114,13 @@ void main_example_two_tasks (void ){
 		
         DemoBoardLedInitialise();
     
-        xTaskCreate( pTaskFlashBlue_1Hz,                           /* The function that implements the task. */
+        xTaskCreate( pTaskFlashBlue_0_5Hz,                           /* The function that implements the task. */
 					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
 					( void * ) NULL,                        /* The parameter passed to the task  */
 					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
 					NULL );									/* The task handle is not required, so NULL is passed. */
-        xTaskCreate( pTaskFlashRed_0_5Hz,                           /* The function that implements the task. */
+        xTaskCreate( pTaskFlashRed_2Hz,                           /* The function that implements the task. */
 					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
 					( void * ) NULL,                        /* The parameter passed to the task  */
@@ -144,9 +145,10 @@ void main_example_interrupt(void) {
     /* Start the tasks . */
 	vTaskStartScheduler();
     
-    
-    
 }
+
+StaticTask_t xTaskBlueBuffer;
+StackType_t  xStackBlue[MINIMAL_TASK_STACK_SIZE];
 
 /**
  * RTOS_EXAMPLE_STATIC_TASK
@@ -156,7 +158,7 @@ void main_example_interrupt(void) {
  */
 void main_example_static_task (void ){
     
-    xTaskCreateStatic( pTaskFlashBlue_1Hz,                           /* The function that implements the task. */
+    xTaskCreateStatic( pTaskFlashBlue_0_5Hz,                           /* The function that implements the task. */
 		"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 		MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
 		( void * ) NULL,                        /* The parameter passed to the task  */
@@ -169,22 +171,51 @@ void main_example_static_task (void ){
 }
 
 
-static void pTaskFlashBlue_1Hz( void *pvParameters )
+void main_timer_example(void) {
+
+    TimerHandle_t aTimer;
+
+    DemoBoardLedInitialise();
+    
+    xTaskCreate( pTaskFlashBlue_0_5Hz,                           /* The function that implements the task. */
+		"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+		MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+		( void * ) NULL,                        /* The parameter passed to the task  */
+		TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+		NULL  );									/* . */
+	aTimer = xTimerCreate( 	"Blinky",					/* A text name, purely to help debugging. */
+		( 200 ),/* The timer period. */
+		pdTRUE,						/* This is an auto-reload timer, so xAutoReload is set to pdTRUE. */
+		( void * ) 0,				/* The ID is not used, so can be set to anything. */
+		pFToggleGreenLED		/* The callback function that inspects the status of all the other tasks. */
+		);
+
+		if( aTimer != NULL )
+		{
+			xTimerStart( aTimer, 0 ); /* start the timer with no blocking (starting delay), ignored till OS starts anyway */
+		}
+
+	/* Start the task */
+	vTaskStartScheduler();
+   
+}
+
+static void pTaskFlashBlue_0_5Hz( void *pvParameters )
 {  
 	for( ;; )
 	{
         DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
-        vTaskDelay(500);           
+        vTaskDelay(2000);           
 	}
 }
 
-static void pTaskFlashRed_0_5Hz( void *pvParameters )
+static void pTaskFlashRed_2Hz( void *pvParameters )
 {
 
     
 	for( ;; )
 	{
-			DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
+			DemoBoardToggleLED( DEMOBOARD_RED_LED );
             vTaskDelay(250);
             
 	}
@@ -204,6 +235,12 @@ static void pTaskCheckTamper( void *pvParameters )
             
             
 	}
+}
+
+static void pFToggleGreenLED( TimerHandle_t xTimer ) {
+    
+  DemoBoardToggleLED( DEMOBOARD_GREEN_LED );  
+    
 }
 
 

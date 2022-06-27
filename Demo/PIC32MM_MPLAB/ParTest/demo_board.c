@@ -31,6 +31,7 @@ void DemoBoardLedInitialise( void )
 	PORTD = ptALL_OFF;
 	PORTC = ptALL_OFF;
     //LATCSET = 0xFFFE;
+    CNPUC = 0x0020;
 }
 /*-----------------------------------------------------------*/
 

@@ -69,6 +69,7 @@
       <itemPath>../lcd.c</itemPath>
       <itemPath>../main.c</itemPath>
       <itemPath>../ParTest/demo_board.c</itemPath>
+      <itemPath>../pragmas.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
