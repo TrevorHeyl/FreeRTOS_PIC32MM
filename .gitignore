@@ -1,0 +1,4 @@
+*.o
+*.d
+Demo/PIC32MM_MPLAB/RTOSDemo_PIC32MM.X/dist/
+
