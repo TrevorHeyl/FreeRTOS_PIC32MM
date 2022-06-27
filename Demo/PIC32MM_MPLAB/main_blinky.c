@@ -1,113 +1,3 @@
-/*
-    FreeRTOS V9.0.0 - Copyright (C) 2016 Real Time Engineers Ltd.
-    All rights reserved
-
-    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
-
-    This file is part of the FreeRTOS distribution.
-
-    FreeRTOS is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation >>>> AND MODIFIED BY <<<< the FreeRTOS exception.
-
-    ***************************************************************************
-    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
-    >>!   distribute a combined work that includes FreeRTOS without being   !<<
-    >>!   obliged to provide the source code for proprietary components     !<<
-    >>!   outside of the FreeRTOS kernel.                                   !<<
-    ***************************************************************************
-
-    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  Full license text is available on the following
-    link: http://www.freertos.org/a00114.html
-
-    ***************************************************************************
-     *                                                                       *
-     *    FreeRTOS provides completely free yet professionally developed,    *
-     *    robust, strictly quality controlled, supported, and cross          *
-     *    platform software that is more than just the market leader, it     *
-     *    is the industry's de facto standard.                               *
-     *                                                                       *
-     *    Help yourself get started quickly while simultaneously helping     *
-     *    to support the FreeRTOS project by purchasing a FreeRTOS           *
-     *    tutorial book, reference manual, or both:                          *
-     *    http://www.FreeRTOS.org/Documentation                              *
-     *                                                                       *
-    ***************************************************************************
-
-    http://www.FreeRTOS.org/FAQHelp.html - Having a problem?  Start by reading
-    the FAQ page "My application does not run, what could be wrong?".  Have you
-    defined configASSERT()?
-
-    http://www.FreeRTOS.org/support - In return for receiving this top quality
-    embedded software for free we request you assist our global community by
-    participating in the support forum.
-
-    http://www.FreeRTOS.org/training - Investing in training allows your team to
-    be as productive as possible as early as possible.  Now you can receive
-    FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
-    Ltd, and the world's leading authority on the world's leading RTOS.
-
-    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
-    compatible FAT file system, and our tiny thread aware UDP/IP stack.
-
-    http://www.FreeRTOS.org/labs - Where new FreeRTOS products go to incubate.
-    Come and try FreeRTOS+TCP, our new open source TCP/IP stack for FreeRTOS.
-
-    http://www.OpenRTOS.com - Real Time Engineers ltd. license FreeRTOS to High
-    Integrity Systems ltd. to sell under the OpenRTOS brand.  Low cost OpenRTOS
-    licenses offer ticketed support, indemnification and commercial middleware.
-
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
-    engineered and independently SIL3 certified version for use in safety and
-    mission critical applications that require provable dependability.
-
-    1 tab == 4 spaces!
-*/
-
-/******************************************************************************
- * NOTE 1:  This project provides two demo applications.  A simple blinky style
- * project, and a more comprehensive test and demo application.  The
- * mainCREATE_SIMPLE_BLINKY_DEMO_ONLY setting in main.c is used to select
- * between the two.  See the notes on using mainCREATE_SIMPLE_BLINKY_DEMO_ONLY
- * in main.c.  This file implements the simply blinky style version.
- *
- * NOTE 2:  This file only contains the source code that is specific to the
- * basic demo.  Generic functions, such FreeRTOS hook functions, and functions
- * required to configure the hardware, are defined in main.c.
- ******************************************************************************
- *
- * main_blinky() creates one queue, two tasks, and one software timer.  It then
- * starts the scheduler.
- *
- * The Blinky Software Timer:
- * This demonstrates an auto-reload software timer.  The timer callback function
- * does nothing but toggle an LED.
- *
- * The Queue Send Task:
- * The queue send task is implemented by the prvQueueSendTask() function in
- * this file.  prvQueueSendTask() sits in a loop that causes it to repeatedly
- * block for 200 milliseconds, before sending the value 100 to the queue that
- * was created within main_blinky().  Once the value is sent, the task loops
- * back around to block for another 200 milliseconds.
- *
- * The Queue Receive Task:
- * The queue receive task is implemented by the prvQueueReceiveTask() function
- * in this file.  prvQueueReceiveTask() sits in a loop where it repeatedly
- * blocks on attempts to read data from the queue that was created within
- * main_blinky().  When data is received, the task checks the value of the
- * data, and if the value equals the expected 100, toggles the LED.  The 'block
- * time' parameter passed to the queue receive function specifies that the
- * task should be held in the Blocked state indefinitely to wait for data to
- * be available on the queue.  The queue receive task will only leave the
- * Blocked state when the queue send task writes to the queue.  As the queue
- * send task writes to the queue every 200 milliseconds, the queue receive
- * task leaves the Blocked state every 200 milliseconds, and therefore toggles
- * the LED every 200 milliseconds.
- */
-
 /* Standard includes. */
 #include <stdio.h>
 
@@ -118,11 +8,18 @@
 #include "timers.h"
 
 /* Standard demo includes. */
-#include "partest.h"
+#include "demo_board.h"
+
 
 /* Priorities at which the tasks are created. */
 #define mainQUEUE_RECEIVE_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
 #define	mainQUEUE_SEND_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
+
+#define TASK_LOW_PRIORITY		( tskIDLE_PRIORITY + 1 )
+
+/* specific configs */
+#define MINIMAL_TASK_STACK_SIZE           200
+
 
 /* The rate at which data is sent to the queue.  The 200ms value is converted
 to ticks using the portTICK_PERIOD_MS constant. */
@@ -142,18 +39,27 @@ functionality. */
 converted to ticks using the portTICK_PERIOD_MS constant. */
 #define mainBLINKY_TIMER_PERIOD				( 50 / portTICK_PERIOD_MS )
 
-/* The LED used by the communicating tasks and the blinky timer respectively. */
-#define mainTASKS_LED						( 0 )
-#define mainTIMER_LED						( 1 )
 
 /* Misc. */
 #define mainDONT_BLOCK						( 0 )
 
 /*-----------------------------------------------------------*/
 
+#define MINIMAL_TASK_STACK_SIZE 200
+
+StaticTask_t xTaskBlueBuffer;
+StackType_t  xStackBlue[MINIMAL_TASK_STACK_SIZE];
+
+
 /*
  * The tasks as described in the comments at the top of this file.
  */
+static void pTaskFlashBlue_1Hz( void *pvParameters );
+static void pTaskFlashRed_0_5Hz( void *pvParameters );
+static void pTaskCheckTamper( void *pvParameters );
+
+
+
 static void prvQueueReceiveTask( void *pvParameters );
 static void prvQueueSendTask( void *pvParameters );
 
@@ -168,6 +74,9 @@ static void prvBlinkyTimerCallback( TimerHandle_t xTimer );
  * mainCREATE_SIMPLE_BLINKY_DEMO_ONLY is set to 1.
  */
 void main_blinky( void );
+void main_example_simple_task (void );
+void main_example_two_tasks (void);
+
 
 /*-----------------------------------------------------------*/
 
@@ -175,6 +84,131 @@ void main_blinky( void );
 static QueueHandle_t xQueue = NULL;
 
 /*-----------------------------------------------------------*/
+
+
+
+/**
+ * RTOS_EXAMPLE_SIMPLE_TASK
+ * Simple task, only one task running, flashing an LED at 1Hz
+ */
+void main_example_simple_task (void ){
+    
+        xTaskCreate( pTaskFlashBlue_1Hz,                           /* The function that implements the task. */
+					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					NULL  );									/* . */
+
+		/* Start the task */
+		vTaskStartScheduler();
+	
+}
+
+/**
+ * RTOS_EXAMPLE_TWO_TASKS
+ * Simple tasks, each flashing a different  LED at a different rate
+ */
+void main_example_two_tasks (void ){
+		
+        DemoBoardLedInitialise();
+    
+        xTaskCreate( pTaskFlashBlue_1Hz,                           /* The function that implements the task. */
+					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					NULL );									/* The task handle is not required, so NULL is passed. */
+        xTaskCreate( pTaskFlashRed_0_5Hz,                           /* The function that implements the task. */
+					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					NULL );									/* The task handle is not required, so NULL is passed. */
+
+		/* Start the tasks . */
+		vTaskStartScheduler();
+	
+}
+
+void main_example_interrupt(void) {
+    
+    DemoBoardEnableTamper();
+    xTaskCreate( pTaskCheckTamper,                           /* The function that implements the task. */
+					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					NULL );									/* The task handle is not required, so NULL is passed. */
+
+    /* Start the tasks . */
+	vTaskStartScheduler();
+    
+    
+    
+}
+
+/**
+ * RTOS_EXAMPLE_STATIC_TASK
+ * Simple task, only one task running, flashing an LED at 1Hz
+ * Task uses static memory stack. If only static stack tasks are created then we can define the heap size to 0
+ * This is useful if dynamic memory allocation is not required or wanted 
+ */
+void main_example_static_task (void ){
+    
+        xTaskCreateStatic( pTaskFlashBlue_1Hz,                           /* The function that implements the task. */
+					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					 xStackBlue ,&xTaskBlueBuffer  );		/* Task control block and stack memory */
+
+		/* Start the task */
+		vTaskStartScheduler();
+	
+}
+
+
+static void pTaskFlashBlue_1Hz( void *pvParameters )
+{
+
+    
+	for( ;; )
+	{
+			DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
+            vTaskDelay(500);
+            
+	}
+}
+
+static void pTaskFlashRed_0_5Hz( void *pvParameters )
+{
+
+    
+	for( ;; )
+	{
+			DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
+            vTaskDelay(250);
+            
+	}
+}
+
+static void pTaskCheckTamper( void *pvParameters )
+{
+    DemoBoardEnableTamper();
+    
+	for( ;; )
+	{
+			if (DemoBoardReadTamper() == 0)
+                DemoBoardSetLED( DEMOBOARD_RED_LED );
+            else
+                DemoBoardClearLED( DEMOBOARD_RED_LED );                
+            vTaskDelay(100);
+            
+            
+	}
+}
+
 
 void main_blinky( void )
 {
@@ -255,9 +289,13 @@ static void prvQueueReceiveTask( void *pvParameters )
 {
 unsigned long ulReceivedValue;
 
+    uint8_t counter = 0;
+
 	/* Check the task parameter is as expected. */
 	configASSERT( ( ( unsigned long ) pvParameters ) == mainQUEUE_RECEIVE_PARAMETER );
 
+    DemoBoardLedInitialise();
+    
 	for( ;; )
 	{
 		/* Wait until something arrives in the queue - this task will block
@@ -269,7 +307,14 @@ unsigned long ulReceivedValue;
 		is it the expected value?  If it is, toggle the LED. */
 		if( ulReceivedValue == 100UL )
 		{
-			vParTestToggleLED( mainTASKS_LED );
+			DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
+//            if (counter % 2) {
+//                DemoBoardSetLED(DEMOBOARD_BLUE_LED);
+//            } else {
+//                DemoBoardClearLED(DEMOBOARD_BLUE_LED)  ;              
+//            }
+            counter++;
+            
 			ulReceivedValue = 0U;
 		}
 	}
@@ -281,6 +326,59 @@ static void prvBlinkyTimerCallback( TimerHandle_t xTimer )
 	/* This function is called when the blinky software time expires.  All the
 	function does is toggle the LED.  LED mainTIMER_LED should therefore toggle
 	with the period set by mainBLINKY_TIMER_PERIOD. */
-	vParTestToggleLED( mainTIMER_LED );
+	//vParTestToggleLED( DEMOBOARD_GREEN_LED );
 }
 
+
+/* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an
+implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
+used by the Idle task. */
+void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
+                                    StackType_t **ppxIdleTaskStackBuffer,
+                                    uint32_t *pulIdleTaskStackSize )
+{
+/* If the buffers to be provided to the Idle task are declared inside this
+function then they must be declared static - otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+static StaticTask_t xIdleTaskTCB;
+static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+
+    /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
+    state will be stored. */
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+
+    /* Pass out the array that will be used as the Idle task's stack. */
+    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+
+    /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
+/*-----------------------------------------------------------*/
+
+/* configSUPPORT_STATIC_ALLOCATION and configUSE_TIMERS are both set to 1, so the
+application must provide an implementation of vApplicationGetTimerTaskMemory()
+to provide the memory that is used by the Timer service task. */
+void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer,
+                                     StackType_t **ppxTimerTaskStackBuffer,
+                                     uint32_t *pulTimerTaskStackSize )
+{
+/* If the buffers to be provided to the Timer task are declared inside this
+function then they must be declared static - otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+static StaticTask_t xTimerTaskTCB;
+static StackType_t uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
+
+    /* Pass out a pointer to the StaticTask_t structure in which the Timer
+    task's state will be stored. */
+    *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
+
+    /* Pass out the array that will be used as the Timer task's stack. */
+    *ppxTimerTaskStackBuffer = uxTimerTaskStack;
+
+    /* Pass out the size of the array pointed to by *ppxTimerTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configTIMER_TASK_STACK_DEPTH is specified in words, not bytes. */
+    *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+}

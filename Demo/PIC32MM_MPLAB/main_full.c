@@ -147,7 +147,7 @@
 #include "timers.h"
 
 /* Demo application includes. */
-#include "partest.h"
+#include "demo_board.h"
 #include "blocktim.h"
 #include "flash_timer.h"
 #include "semtest.h"
@@ -403,7 +403,7 @@ static xLCDMessage xMessage = { ( 200 / portTICK_PERIOD_MS ), cStringBuffer };
     /* Send the message to the LCD gatekeeper for display. */
 	xQueueSend( xLCDQueue, &xMessage, portMAX_DELAY );
 
-	vParTestToggleLED( mainCHECK_LED );
+	DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
 }
 /*-----------------------------------------------------------*/
 

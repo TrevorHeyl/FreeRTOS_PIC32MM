@@ -77,7 +77,7 @@
 #include "timers.h"
 
 /* Demo program include files. */
-#include "partest.h"
+#include "demo_board.h"
 #include "flash_timer.h"
 
 /* The toggle rates are all a multple of ledFLASH_RATE_BASE. */
@@ -134,7 +134,7 @@ BaseType_t xTimerID;
 	each timer uses the same callback.  The ID is then also used as the number
 	of the LED that is to be toggled. */
 	xTimerID = ( BaseType_t ) pvTimerGetTimerID( xTimer );
-	vParTestToggleLED( xTimerID );
+	DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
 }
 
 

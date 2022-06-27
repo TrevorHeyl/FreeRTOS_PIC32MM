@@ -16,6 +16,10 @@
                 <sourceRootElem>../</sourceRootElem>
                 <sourceRootElem>../../../Source/portable/MemMang</sourceRootElem>
                 <sourceRootElem>../../../Source/portable/MPLAB/PIC32MM</sourceRootElem>
+                <sourceRootElem>../../../pic32mm_library/src</sourceRootElem>
+                <sourceRootElem>../../../pic32mm_library/inc</sourceRootElem>
+                <sourceRootElem>../../../plentify_common_library/inc</sourceRootElem>
+                <sourceRootElem>../../../plentify_common_library/src</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>
