@@ -9,15 +9,14 @@
 /* Hardware specific includes. */
 #include "ConfigPerformance.h"
 
-/* Set mainCREATE_SIMPLE_BLINKY_DEMO_ONLY to one to run the simple blinky demo,
-or 0 to run the more comprehensive test and demo application. */
-#define RTOS_EXAMPLE_SIMPLE_TASK    0
-#define RTOS_EXAMPLE_TWO_TASKS      0
-#define RTOS_EXAMPLE_STATIC_TASK    0
-#define RTOS_EXAMPLE_INTERRUPT      0
-#define RTOS_EXAMPLE_TIMER          0
-#define RTOS_EXAMPLE_QUEUE          0
-#define RTOS_EXAMPLE_SEMAPHORE      1
+/* Choose your Practical here. Choose ONLY one*/
+#define PRAC1_EXAMPLE_SIMPLE_TASK    1
+#define PRAC2_EXAMPLE_TWO_TASKS      0
+#define PRAC3_EXAMPLE_STATIC_TASK    0
+#define PRAC4_EXAMPLE_INTERRUPT      0
+#define PRAC5_EXAMPLE_TIMER          0
+#define PRAC6_EXAMPLE_QUEUE          0
+#define PRAC7_EXAMPLE_SEMAPHORE      0
 
 
 /*-----------------------------------------------------------*/
@@ -38,31 +37,31 @@ int main( void ) {
 	SetupHardware();
     
     /* Select demo to use */
-    #if  RTOS_EXAMPLE_SIMPLE_TASK == 1 
+    #if  PRAC1_EXAMPLE_SIMPLE_TASK == 1 
 	{
 		main_example_simple_task();
 	}
-   #elif  RTOS_EXAMPLE_TWO_TASKS == 1
+   #elif  PRAC2_EXAMPLE_TWO_TASKS == 1
 	{
 		main_example_two_tasks();
 	}
-   #elif RTOS_EXAMPLE_STATIC_TASK == 1
+   #elif PRAC3_EXAMPLE_STATIC_TASK == 1
     {
         main_example_static_task();
     }
-    #elif RTOS_EXAMPLE_INTERRUPT == 1
+    #elif PRAC4_EXAMPLE_INTERRUPT == 1
     {
         main_example_interrupt();  
     }
-    #elif RTOS_EXAMPLE_TIMER == 1
+    #elif PRAC5_EXAMPLE_TIMER == 1
     {
         main_timer_example();
     }
-    #elif RTOS_EXAMPLE_QUEUE == 1
+    #elif PRAC6_EXAMPLE_QUEUE == 1
     {
         main_queue_example();
     }
-    #elif RTOS_EXAMPLE_SEMAPHORE == 1
+    #elif PRAC7_EXAMPLE_SEMAPHORE == 1
     {
         main_example_semaphore();
     }

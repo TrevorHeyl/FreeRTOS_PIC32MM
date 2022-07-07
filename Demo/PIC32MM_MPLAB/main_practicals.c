@@ -87,15 +87,15 @@ void main_example_semaphore (void);
 
 
 /**
- * RTOS_EXAMPLE_SIMPLE_TASK
- * Simple task, only one task running, flashing an LED at 1Hz
+ * PRAC1_EXAMPLE_SIMPLE_TASK
+ * Simple task, only one task running, flashing a BLUE LED at 0.5Hz
  */
 void main_example_simple_task (void ){
     
     DemoBoardLedInitialise();
     
     xTaskCreate( pTaskFlashBlue_0_5Hz,                           /* The function that implements the task. */
-		"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+		"Blue LED task", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 		MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
 		( void * ) NULL,                        /* The parameter passed to the task  */
 		TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
@@ -106,8 +106,26 @@ void main_example_simple_task (void ){
 	
 }
 
+void pTaskFlashBlue_0_5Hz( void *pvParameters )
+{  
+	for( ;; )
+	{
+        DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
+        vTaskDelay(2000);           
+	}
+}
+
+void pTaskFlashRed_2Hz( void *pvParameters )
+{
+	for( ;; )
+	{
+			DemoBoardToggleLED( DEMOBOARD_RED_LED );
+            vTaskDelay(250);           
+	}
+}
+
 /**
- * RTOS_EXAMPLE_TWO_TASKS
+ * PRAC2_EXAMPLE_TWO_TASKS
  * Simple tasks, each flashing a different  LED at a different rate
  */
 void main_example_two_tasks (void ){
@@ -115,13 +133,13 @@ void main_example_two_tasks (void ){
         DemoBoardLedInitialise();
     
         xTaskCreate( pTaskFlashBlue_0_5Hz,                           /* The function that implements the task. */
-					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					"Blue LED task", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
 					( void * ) NULL,                        /* The parameter passed to the task  */
 					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
 					NULL );									/* The task handle is not required, so NULL is passed. */
         xTaskCreate( pTaskFlashRed_2Hz,                           /* The function that implements the task. */
-					"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					"Red LED task", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
 					( void * ) NULL,                        /* The parameter passed to the task  */
 					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
@@ -147,19 +165,20 @@ void main_example_interrupt(void) {
     
 }
 
+/* We create the Task TCB and stack in global scope - we could create inside a function but then it goes onto the C-stack*/
 StaticTask_t xTaskBlueBuffer;
 StackType_t  xStackBlue[MINIMAL_TASK_STACK_SIZE];
 
 /**
- * RTOS_EXAMPLE_STATIC_TASK
- * Simple task, only one task running, flashing an LED at 1Hz
+ * PRAC3_EXAMPLE_STATIC_TASK
+ * Simple task, only one task running, flashing an LED at 0.5Hz
  * Task uses static memory stack. If only static stack tasks are created then we can define the heap size to 0
  * This is useful if dynamic memory allocation is not required or wanted 
  */
 void main_example_static_task (void ){
     
     xTaskCreateStatic( pTaskFlashBlue_0_5Hz,                           /* The function that implements the task. */
-		"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+		"Blue LED task", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 		MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
 		( void * ) NULL,                        /* The parameter passed to the task  */
 		TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
@@ -171,14 +190,18 @@ void main_example_static_task (void ){
 }
 
 
+/**
+ * PRAC4_EXAMPLE_TIMER
+ * We create a task to flash the blue LED at 0.5Hz and we create a timer which has a callback to flash the GREEN led at a different rate
+ */
 void main_timer_example(void) {
 
-    TimerHandle_t aTimer;
+    TimerHandle_t aTimer; // we can create it here, in local scope
 
     DemoBoardLedInitialise();
     
     xTaskCreate( pTaskFlashBlue_0_5Hz,                           /* The function that implements the task. */
-		"Simple", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+		"Blue LED task", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 		MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
 		( void * ) NULL,                        /* The parameter passed to the task  */
 		TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
@@ -209,8 +232,8 @@ static QueueHandle_t xLedQueue = NULL;
 /*-----------------------------------------------------------*/
 
 /**
- * RTOS_EXAMPLE_QUEUE
- * 
+ * PRAC6_EXAMPLE_QUEUE
+ * We create 2 tasks. One is a producer and one a consumer of queued messages
  */
 void main_queue_example (void ){
 		
@@ -245,8 +268,8 @@ void main_queue_example (void ){
 SemaphoreHandle_t xLedFlashToggleSemaPhore; 
 
 /**
- * RTOS_EXAMPLE_SEMAPHORE
- * Simple tasks, each flashing a different  LED at a different rate
+ * PRAC7_EXAMPLE_SEMAPHORE
+ * Demonstrating the use of a binary semaphore
  */
 void main_example_semaphore (void ){
 		
@@ -292,7 +315,7 @@ void pTaskFlasher( void *pvParameters )
 {  
 	for( ;; )
 	{
-        xSemaphoreTake(xLedFlashToggleSemaPhore,portMAX_DELAY);
+        xSemaphoreTake(xLedFlashToggleSemaPhore,portMAX_DELAY); /* we block here until there is a semaphore given to this sempahore */
         DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
         
 	}
@@ -362,26 +385,6 @@ void pTaskLedPoster( void *pvParameters )
 	}
 }
 
-void pTaskFlashBlue_0_5Hz( void *pvParameters )
-{  
-	for( ;; )
-	{
-        DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
-        vTaskDelay(2000);           
-	}
-}
-
-void pTaskFlashRed_2Hz( void *pvParameters )
-{
-
-    
-	for( ;; )
-	{
-			DemoBoardToggleLED( DEMOBOARD_RED_LED );
-            vTaskDelay(250);
-            
-	}
-}
 
 void pTaskCheckTamper( void *pvParameters )
 {
