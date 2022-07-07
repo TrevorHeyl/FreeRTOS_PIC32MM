@@ -24,19 +24,19 @@
 void DemoBoardLedInitialise( void )
 {
 		
-    ANSELA=0;ANSELB=0;ANSELC=0;ANSELD=0;
+    //ANSELA=0;ANSELB=0;ANSELC=0;ANSELD=0;
     //AD1PCFG = 0xffff;
 	TRISD = 0xFFF6;  // 0 is output	
     TRISC = 0x7FF7;
 	PORTD = ptALL_OFF;
 	PORTC = ptALL_OFF;
     //LATCSET = 0xFFFE;
-    CNPUC = 0x0020;
+    //CNPUC = 0x0020;
 }
 /*-----------------------------------------------------------*/
 
 
-void DemoBoardSetLED( DEMOBOARD_LEDS_t led  ) {
+void DemoBoardClearLED( DEMOBOARD_LEDS_t led  ) {
     
     switch (led) {
         case DEMOBOARD_RED_LED :
@@ -66,7 +66,7 @@ int DemoBoardReadTamper( void) {
     
 }
 
-void DemoBoardClearLED( DEMOBOARD_LEDS_t led  ) {
+void DemoBoardSetLED( DEMOBOARD_LEDS_t led  ) {
     
     switch (led) {
         case DEMOBOARD_RED_LED :

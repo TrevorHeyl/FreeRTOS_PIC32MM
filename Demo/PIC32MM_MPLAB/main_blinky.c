@@ -6,6 +6,7 @@
 #include "task.h"
 #include "queue.h"
 #include "timers.h"
+#include "semphr.h"
 
 /* Standard demo includes. */
 #include "demo_board.h"
@@ -28,7 +29,7 @@ to ticks using the portTICK_PERIOD_MS constant. */
 /* The number of items the queue can hold.  This is 1 as the receive task
 will remove items as they are added, meaning the send task should always find
 the queue empty. */
-#define mainQUEUE_LENGTH					( 1 )
+#define mainQUEUE_LENGTH					( 10 )
 
 /* Values passed to the two tasks just to check the task parameter
 functionality. */
@@ -51,10 +52,15 @@ converted to ticks using the portTICK_PERIOD_MS constant. */
 /*
  * The tasks as described in the comments at the top of this file.
  */
-static void pTaskFlashRed_2Hz( void *pvParameters );
-static void pTaskFlashBlue_0_5Hz( void *pvParameters );
-static void pTaskCheckTamper( void *pvParameters );
-static void pFToggleGreenLED( TimerHandle_t xTimer );
+void pTaskFlashRed_2Hz( void *pvParameters );
+void pTaskFlashBlue_0_5Hz( void *pvParameters );
+void pTaskCheckTamper( void *pvParameters );
+void pFToggleGreenLED( TimerHandle_t xTimer );
+void pTaskLedHandler( void *pvParameters );
+void pTaskLedPoster( void *pvParameters );
+void pTaskFlasher( void *pvParameters );
+void pTaskFlashControl( void *pvParameters );
+
 
 
 
@@ -75,14 +81,8 @@ static void prvBlinkyTimerCallback( TimerHandle_t xTimer );
 void main_blinky( void );
 void main_example_simple_task (void );
 void main_example_two_tasks (void);
-
-
-/*-----------------------------------------------------------*/
-
-/* The queue used by both tasks. */
-static QueueHandle_t xQueue = NULL;
-
-/*-----------------------------------------------------------*/
+void main_queue_example (void);
+void main_example_semaphore (void);
 
 
 
@@ -200,7 +200,169 @@ void main_timer_example(void) {
    
 }
 
-static void pTaskFlashBlue_0_5Hz( void *pvParameters )
+
+/*-----------------------------------------------------------*/
+
+/* The queue used by tasks. */
+static QueueHandle_t xLedQueue = NULL;
+
+/*-----------------------------------------------------------*/
+
+/**
+ * RTOS_EXAMPLE_QUEUE
+ * 
+ */
+void main_queue_example (void ){
+		
+        DemoBoardLedInitialise();
+        
+        	/* Create the queue. */
+        xLedQueue = xQueueCreate( mainQUEUE_LENGTH, sizeof( unsigned long ) );
+
+        if( xLedQueue == NULL ) {
+            return;
+        }
+
+    
+        xTaskCreate( pTaskLedHandler,                           /* The function that implements the task. */
+					"Led Handler", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					NULL );									/* The task handle is not required, so NULL is passed. */
+        xTaskCreate( pTaskLedPoster,                           /* The function that implements the task. */
+					"Led Poster", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					NULL );									/* The task handle is not required, so NULL is passed. */
+
+		/* Start the tasks . */
+		vTaskStartScheduler();
+	
+}
+
+SemaphoreHandle_t xLedFlashToggleSemaPhore; 
+
+/**
+ * RTOS_EXAMPLE_SEMAPHORE
+ * Simple tasks, each flashing a different  LED at a different rate
+ */
+void main_example_semaphore (void ){
+		
+        DemoBoardLedInitialise();
+    
+        xLedFlashToggleSemaPhore = xSemaphoreCreateBinary();
+
+        if ( (xLedFlashToggleSemaPhore == NULL) ) {
+            return;
+        }
+        
+        xTaskCreate( pTaskFlasher,                           /* The function that implements the task. */
+					"Flasher", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					NULL );									/* The task handle is not required, so NULL is passed. */
+        xTaskCreate( pTaskFlashControl,                           /* The function that implements the task. */
+					"Control", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					NULL );									/* The task handle is not required, so NULL is passed. */
+
+		/* Start the tasks . */
+		vTaskStartScheduler();
+	
+}
+
+void pTaskFlashControl( void *pvParameters )
+{  
+    unsigned long ulLedColour;
+	for( ;; )
+	{
+        xSemaphoreGive(xLedFlashToggleSemaPhore);
+        vTaskDelay(2000);           
+        xSemaphoreGive(xLedFlashToggleSemaPhore);
+        vTaskDelay(2000);           
+	}
+}
+
+void pTaskFlasher( void *pvParameters )
+{  
+	for( ;; )
+	{
+        xSemaphoreTake(xLedFlashToggleSemaPhore,portMAX_DELAY);
+        DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
+        
+	}
+}
+
+void pTaskLedHandler( void *pvParameters )
+{  
+    
+    unsigned long ulReceivedValue;
+    
+	for( ;; )
+	{
+		/* Wait until something arrives in the queue - this task will block
+		indefinitely provided INCLUDE_vTaskSuspend is set to 1 in
+		FreeRTOSConfig.h. */
+		xQueueReceive( xLedQueue, &ulReceivedValue, portMAX_DELAY );
+
+		if( ulReceivedValue == DEMOBOARD_RED_LED )
+		{
+			DemoBoardSetLED( DEMOBOARD_RED_LED );
+		}
+		if( ulReceivedValue == DEMOBOARD_GREEN_LED )
+		{
+			DemoBoardSetLED( DEMOBOARD_GREEN_LED );
+		}
+		if( ulReceivedValue == DEMOBOARD_BLUE_LED )
+		{
+			DemoBoardSetLED( DEMOBOARD_BLUE_LED );
+		}
+        if (ulReceivedValue == DEMOBOARD_ALL_OFF) 
+        {
+			DemoBoardClearLED( DEMOBOARD_BLUE_LED );
+			DemoBoardClearLED( DEMOBOARD_GREEN_LED );
+			DemoBoardClearLED( DEMOBOARD_RED_LED );            
+        }
+    }
+
+}
+
+void pTaskLedPoster( void *pvParameters )
+{  
+    unsigned long ulLedColour;
+	for( ;; )
+	{
+        if (xLedQueue != NULL ){
+            ulLedColour = DEMOBOARD_ALL_OFF;
+            xQueueSend( xLedQueue, &ulLedColour, 0U );
+            ulLedColour = DEMOBOARD_RED_LED;
+            xQueueSend( xLedQueue, &ulLedColour, 0U ); // 0 = dont wait/block if queue full
+        }
+        vTaskDelay(2000);           
+
+        if (xLedQueue != NULL ){
+            ulLedColour = DEMOBOARD_ALL_OFF;
+            xQueueSend( xLedQueue, &ulLedColour, 0U );
+            ulLedColour = DEMOBOARD_GREEN_LED;
+            xQueueSend( xLedQueue, &ulLedColour, 0U );;
+        }
+        vTaskDelay(2000);           
+        if (xLedQueue != NULL ){
+            ulLedColour = DEMOBOARD_BLUE_LED;
+            xQueueSend( xLedQueue, &ulLedColour, 0U );;
+            ulLedColour = DEMOBOARD_ALL_OFF;
+            xQueueSend( xLedQueue, &ulLedColour, 0U );
+        }
+        vTaskDelay(2000);           
+	}
+}
+
+void pTaskFlashBlue_0_5Hz( void *pvParameters )
 {  
 	for( ;; )
 	{
@@ -209,7 +371,7 @@ static void pTaskFlashBlue_0_5Hz( void *pvParameters )
 	}
 }
 
-static void pTaskFlashRed_2Hz( void *pvParameters )
+void pTaskFlashRed_2Hz( void *pvParameters )
 {
 
     
@@ -221,7 +383,7 @@ static void pTaskFlashRed_2Hz( void *pvParameters )
 	}
 }
 
-static void pTaskCheckTamper( void *pvParameters )
+void pTaskCheckTamper( void *pvParameters )
 {
     DemoBoardEnableTamper();
     
@@ -237,13 +399,13 @@ static void pTaskCheckTamper( void *pvParameters )
 	}
 }
 
-static void pFToggleGreenLED( TimerHandle_t xTimer ) {
+void pFToggleGreenLED( TimerHandle_t xTimer ) {
     
   DemoBoardToggleLED( DEMOBOARD_GREEN_LED );  
     
 }
 
-
+#if 0
 void main_blinky( void )
 {
 TimerHandle_t xTimer;
@@ -289,9 +451,8 @@ TimerHandle_t xTimer;
 	FreeRTOS web site for more details. */
 	for( ;; );
 }
-/*-----------------------------------------------------------*/
 
-static void prvQueueSendTask( void *pvParameters )
+#void prvQueueSendTask( void *pvParameters )
 {
 TickType_t xNextWakeTime;
 const unsigned long ulValueToSend = 100UL;
@@ -319,7 +480,7 @@ const unsigned long ulValueToSend = 100UL;
 }
 /*-----------------------------------------------------------*/
 
-static void prvQueueReceiveTask( void *pvParameters )
+void prvQueueReceiveTask( void *pvParameters )
 {
 unsigned long ulReceivedValue;
 
@@ -355,7 +516,7 @@ unsigned long ulReceivedValue;
 }
 /*-----------------------------------------------------------*/
 
-static void prvBlinkyTimerCallback( TimerHandle_t xTimer )
+void prvBlinkyTimerCallback( TimerHandle_t xTimer )
 {
 	/* This function is called when the blinky software time expires.  All the
 	function does is toggle the LED.  LED mainTIMER_LED should therefore toggle
@@ -363,7 +524,7 @@ static void prvBlinkyTimerCallback( TimerHandle_t xTimer )
 	//vParTestToggleLED( DEMOBOARD_GREEN_LED );
 }
 
-
+#endif
 /* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an
 implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
 used by the Idle task. */

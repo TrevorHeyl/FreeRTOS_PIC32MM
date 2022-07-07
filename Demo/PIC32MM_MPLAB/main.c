@@ -15,7 +15,9 @@ or 0 to run the more comprehensive test and demo application. */
 #define RTOS_EXAMPLE_TWO_TASKS      0
 #define RTOS_EXAMPLE_STATIC_TASK    0
 #define RTOS_EXAMPLE_INTERRUPT      0
-#define RTOS_EXAMPLE_TIMER          1
+#define RTOS_EXAMPLE_TIMER          0
+#define RTOS_EXAMPLE_QUEUE          0
+#define RTOS_EXAMPLE_SEMAPHORE      1
 
 
 /*-----------------------------------------------------------*/
@@ -55,6 +57,14 @@ int main( void ) {
     #elif RTOS_EXAMPLE_TIMER == 1
     {
         main_timer_example();
+    }
+    #elif RTOS_EXAMPLE_QUEUE == 1
+    {
+        main_queue_example();
+    }
+    #elif RTOS_EXAMPLE_SEMAPHORE == 1
+    {
+        main_example_semaphore();
     }
     #else
         ##error PLEASE define at least one EXAMPLE
