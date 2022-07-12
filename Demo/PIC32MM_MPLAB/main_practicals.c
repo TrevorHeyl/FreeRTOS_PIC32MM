@@ -307,7 +307,7 @@ SemaphoreHandle_t LEDMutex;
 
 /**
  * PRAC8_EXAMPLE_MUTEX
- * Demonstrating the use of a binary semaphore
+ * Demonstrating the use of a mutex
  */
 void main_example_mutex(void){
     
