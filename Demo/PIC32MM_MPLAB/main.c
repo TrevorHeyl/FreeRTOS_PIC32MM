@@ -10,13 +10,14 @@
 #include "ConfigPerformance.h"
 
 /* Choose your Practical here. Choose ONLY one*/
-#define PRAC1_EXAMPLE_SIMPLE_TASK    1
+#define PRAC1_EXAMPLE_SIMPLE_TASK    0
 #define PRAC2_EXAMPLE_TWO_TASKS      0
 #define PRAC3_EXAMPLE_STATIC_TASK    0
 #define PRAC4_EXAMPLE_INTERRUPT      0
 #define PRAC5_EXAMPLE_TIMER          0
 #define PRAC6_EXAMPLE_QUEUE          0
 #define PRAC7_EXAMPLE_SEMAPHORE      0
+#define PRAC8_EXAMPLE_MUTEX          1
 
 
 /*-----------------------------------------------------------*/
@@ -64,6 +65,10 @@ int main( void ) {
     #elif PRAC7_EXAMPLE_SEMAPHORE == 1
     {
         main_example_semaphore();
+    }
+    #elif PRAC8_EXAMPLE_MUTEX == 1
+    {
+        main_example_mutex();
     }
     #else
         ##error PLEASE define at least one EXAMPLE

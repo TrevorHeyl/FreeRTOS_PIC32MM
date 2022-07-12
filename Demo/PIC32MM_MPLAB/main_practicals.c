@@ -60,6 +60,9 @@ void pTaskLedHandler( void *pvParameters );
 void pTaskLedPoster( void *pvParameters );
 void pTaskFlasher( void *pvParameters );
 void pTaskFlashControl( void *pvParameters );
+void pTaskFlashBlue_Mutexed( void *pvParameters );
+void pTaskFlashRed_Mutexed( void *pvParameters );
+
 
 
 
@@ -83,6 +86,7 @@ void main_example_simple_task (void );
 void main_example_two_tasks (void);
 void main_queue_example (void);
 void main_example_semaphore (void);
+void main_example_mutex(void);
 
 
 
@@ -299,6 +303,63 @@ void main_example_semaphore (void ){
 	
 }
 
+SemaphoreHandle_t LEDMutex;
+
+/**
+ * PRAC8_EXAMPLE_MUTEX
+ * Demonstrating the use of a binary semaphore
+ */
+void main_example_mutex(void){
+    
+    
+    DemoBoardLedInitialise();
+    
+    LEDMutex = xSemaphoreCreateMutex();
+    
+    xTaskCreate( pTaskFlashBlue_Mutexed,                           /* The function that implements the task. */
+					"Blue LED task", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					NULL );									/* The task handle is not required, so NULL is passed. */
+    xTaskCreate( pTaskFlashRed_Mutexed,                           /* The function that implements the task. */
+					"Red LED task", 								/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,                  /* The size of the stack to allocate to the task. */
+					( void * ) NULL,                        /* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					NULL );									/* The task handle is not required, so NULL is passed. */
+
+    /* Start the tasks . */
+    vTaskStartScheduler();
+}
+
+
+void pTaskFlashBlue_Mutexed( void *pvParameters )
+{  
+	for( ;; )
+	{     
+        if ( xSemaphoreTake(LEDMutex,portMAX_DELAY) == pdPASS)  /* we block here until there is a semaphore given to this sempahore */
+        {
+            DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
+            xSemaphoreGive(LEDMutex);
+            vTaskDelay(2000);
+        }
+	}
+}
+
+void pTaskFlashRed_Mutexed( void *pvParameters )
+{
+	for( ;; )
+	{     
+        if ( xSemaphoreTake(LEDMutex,portMAX_DELAY) == pdPASS)  /* we block here until there is a semaphore given to this sempahore */
+        {
+            DemoBoardToggleLED( DEMOBOARD_RED_LED );
+            xSemaphoreGive(LEDMutex);
+            vTaskDelay(250);
+        }
+	}
+}
+
 void pTaskFlashControl( void *pvParameters )
 {  
     unsigned long ulLedColour;
@@ -315,9 +376,10 @@ void pTaskFlasher( void *pvParameters )
 {  
 	for( ;; )
 	{
-        xSemaphoreTake(xLedFlashToggleSemaPhore,portMAX_DELAY); /* we block here until there is a semaphore given to this sempahore */
-        DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
-        
+        if ( xSemaphoreTake(xLedFlashToggleSemaPhore,portMAX_DELAY) == pdPASS)  /* we block here until there is a semaphore given to this sempahore */
+        {
+            DemoBoardToggleLED( DEMOBOARD_BLUE_LED );
+        }
 	}
 }
 
@@ -331,25 +393,31 @@ void pTaskLedHandler( void *pvParameters )
 		/* Wait until something arrives in the queue - this task will block
 		indefinitely provided INCLUDE_vTaskSuspend is set to 1 in
 		FreeRTOSConfig.h. */
-		xQueueReceive( xLedQueue, &ulReceivedValue, portMAX_DELAY );
-
-		if( ulReceivedValue == DEMOBOARD_RED_LED )
-		{
-			DemoBoardSetLED( DEMOBOARD_RED_LED );
-		}
-		if( ulReceivedValue == DEMOBOARD_GREEN_LED )
-		{
-			DemoBoardSetLED( DEMOBOARD_GREEN_LED );
-		}
-		if( ulReceivedValue == DEMOBOARD_BLUE_LED )
-		{
-			DemoBoardSetLED( DEMOBOARD_BLUE_LED );
-		}
-        if (ulReceivedValue == DEMOBOARD_ALL_OFF) 
+		if ( xQueueReceive( xLedQueue, &ulReceivedValue, portMAX_DELAY ) == pdPASS)
         {
-			DemoBoardClearLED( DEMOBOARD_BLUE_LED );
-			DemoBoardClearLED( DEMOBOARD_GREEN_LED );
-			DemoBoardClearLED( DEMOBOARD_RED_LED );            
+            if( ulReceivedValue == DEMOBOARD_RED_LED )
+            {
+                DemoBoardSetLED( DEMOBOARD_RED_LED );
+            }
+            if( ulReceivedValue == DEMOBOARD_GREEN_LED )
+            {
+                DemoBoardSetLED( DEMOBOARD_GREEN_LED );
+            }
+            if( ulReceivedValue == DEMOBOARD_BLUE_LED )
+            {
+                DemoBoardSetLED( DEMOBOARD_BLUE_LED );
+            }
+            if (ulReceivedValue == DEMOBOARD_ALL_OFF) 
+            {
+                DemoBoardClearLED( DEMOBOARD_BLUE_LED );
+                DemoBoardClearLED( DEMOBOARD_GREEN_LED );
+                DemoBoardClearLED( DEMOBOARD_RED_LED );            
+            }
+        }
+        else
+        {
+            /* Queue did not return an item. */
+            /* Ok if we were blocking for a time, but else could be sign of an RTOS crash*/
         }
     }
 
