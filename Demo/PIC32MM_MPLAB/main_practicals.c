@@ -353,25 +353,25 @@ void main_example_mutex_extended(void)
     
     ListMutex = xSemaphoreCreateMutex();
     
-    xTaskCreate( pTaskValueIncrementer_withMutex,           /* The function that implements the task. */
-					"Value Incrementer Task", 				/* The text name assigned to the task - for debug only as it is not used by the kernel. */
-					MINIMAL_TASK_STACK_SIZE,                /* The size of the stack to allocate to the task. */
-					( void * ) NULL,                        /* The parameter passed to the task  */
-					TASK_HIGH_PRIORITY,                     /* The priority assigned to the task. */
+    xTaskCreate( pTaskValueIncrementer_withMutex,			/* The function that implements the task. */
+					"Value Incrementer Task",				/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,				/* The size of the stack to allocate to the task. */
+					( void * ) NULL,						/* The parameter passed to the task  */
+					TASK_HIGH_PRIORITY,						/* The priority assigned to the task. */
 					NULL );									/* The task handle is not required, so NULL is passed. */
 
-    xTaskCreate( pTaskValueGetter_withMutex,                /* The function that implements the task. */
-					"Value Getter with Mutex", 				/* The text name assigned to the task - for debug only as it is not used by the kernel. */
-					MINIMAL_TASK_STACK_SIZE,                /* The size of the stack to allocate to the task. */
-					( void * ) NULL,                        /* The parameter passed to the task  */
-					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+    xTaskCreate( pTaskValueGetter_withMutex,				/* The function that implements the task. */
+					"Value Getter with Mutex",				/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,				/* The size of the stack to allocate to the task. */
+					( void * ) NULL,						/* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,						/* The priority assigned to the task. */
 					NULL );									/* The task handle is not required, so NULL is passed. */
 
-	xTaskCreate( pTaskValueGetter_withoutMutex,             /* The function that implements the task. */
-					"Value Getter without Mutex", 			/* The text name assigned to the task - for debug only as it is not used by the kernel. */
-					MINIMAL_TASK_STACK_SIZE,                /* The size of the stack to allocate to the task. */
-					( void * ) NULL,                        /* The parameter passed to the task  */
-					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+	xTaskCreate( pTaskValueGetter_withoutMutex,				/* The function that implements the task. */
+					"Value Getter without Mutex",			/* The text name assigned to the task - for debug only as it is not used by the kernel. */
+					MINIMAL_TASK_STACK_SIZE,				/* The size of the stack to allocate to the task. */
+					( void * ) NULL,						/* The parameter passed to the task  */
+					TASK_LOW_PRIORITY,						/* The priority assigned to the task. */
 					NULL );									/* The task handle is not required, so NULL is passed. */
 
 

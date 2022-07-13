@@ -18,7 +18,7 @@
 #define PRAC6_EXAMPLE_QUEUE          0
 #define PRAC7_EXAMPLE_SEMAPHORE      0
 #define PRAC8_EXAMPLE_MUTEX          0
-#define PRAC9_EXAMPLE_MUTEX			 1
+#define PRAC9_EXAMPLE_MUTEX	         1
 
 
 /*-----------------------------------------------------------*/
