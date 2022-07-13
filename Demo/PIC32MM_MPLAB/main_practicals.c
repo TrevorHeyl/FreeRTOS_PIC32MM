@@ -87,7 +87,7 @@ void main_example_two_tasks (void);
 void main_queue_example (void);
 void main_example_semaphore (void);
 void main_example_mutex(void);
-
+void main_example_mutex_extended(void);
 
 
 /**
@@ -333,6 +333,14 @@ void main_example_mutex(void){
     vTaskStartScheduler();
 }
 
+/**
+ * PRAC9_EXAMPLE_MUTEX
+ * Demonstrating the difference between usng a mutex and not using one
+ */
+void main_example_mutex_extended(void)
+{
+
+}
 
 void pTaskFlashBlue_Mutexed( void *pvParameters )
 {  
