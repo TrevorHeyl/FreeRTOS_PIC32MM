@@ -91,6 +91,8 @@ void main_example_mutex_extended(void);
 
 // Global Variables
 static uint16_t g_ui_mutex_example_counter = 0;
+static uint16_t g_ui_index_for_list = 0;
+static uint16_t mutexed_counter_list[100];
 
 /**
  * PRAC1_EXAMPLE_SIMPLE_TASK
@@ -387,6 +389,22 @@ void pTaskValueIncrementer_withMutex( void *pvParameters )
 			{
 				vTaskDelay(1); // simulate delay of processing
 			}
+			g_ui_index_for_list += 1; // used for accessing a list
+
+            xSemaphoreGive(ListMutex);
+
+            vTaskDelay(2000); // let this task happen every 2000 ticks
+        }
+	}
+}
+
+void pTaskValueGetter_withMutex( void *pvParameters )
+{  
+	for( ;; )
+	{     
+        if ( xSemaphoreTake(ListMutex,portMAX_DELAY) == pdPASS)  /* we block here until there is a semaphore given to this sempahore */
+        {
+			mutexed_counter_list[g_ui_index_for_list] = g_ui_mutex_example_counter; // capture the global counter value and populate into the list
 
             xSemaphoreGive(ListMutex);
 			
