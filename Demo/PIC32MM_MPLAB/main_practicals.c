@@ -17,6 +17,7 @@
 #define	mainQUEUE_SEND_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
 
 #define TASK_LOW_PRIORITY		( tskIDLE_PRIORITY + 1 )
+#define TASK_HIGH_PRIORITY		( tskIDLE_PRIORITY + 2 )
 
 /* specific configs */
 #define MINIMAL_TASK_STACK_SIZE           200
@@ -62,7 +63,9 @@ void pTaskFlasher( void *pvParameters );
 void pTaskFlashControl( void *pvParameters );
 void pTaskFlashBlue_Mutexed( void *pvParameters );
 void pTaskFlashRed_Mutexed( void *pvParameters );
-
+void pTaskValueIncrementer_withMutex( void *pvParameters);
+void pTaskValueGetter_withMutex( void *pvParameters);
+void pTaskValueGetter_withoutMutex( void *pvParameters);
 
 
 
@@ -354,7 +357,7 @@ void main_example_mutex_extended(void)
 					"Value Incrementer Task", 				/* The text name assigned to the task - for debug only as it is not used by the kernel. */
 					MINIMAL_TASK_STACK_SIZE,                /* The size of the stack to allocate to the task. */
 					( void * ) NULL,                        /* The parameter passed to the task  */
-					TASK_LOW_PRIORITY,                      /* The priority assigned to the task. */
+					TASK_HIGH_PRIORITY,                     /* The priority assigned to the task. */
 					NULL );									/* The task handle is not required, so NULL is passed. */
 
     xTaskCreate( pTaskValueGetter_withMutex,                /* The function that implements the task. */
@@ -376,6 +379,20 @@ void main_example_mutex_extended(void)
     vTaskStartScheduler();
 }
 
+/*
+ * Add watches to the following variables and DEBUG the following Task on the break point indicated below.
+ * Watches:
+ *  g_ui_mutex_example_counter
+ *  g_ui_index_for_list
+ *  mutexed_counter_list
+ *  non_mutexed_counter_list
+ 
+ * Desirable behaviour for this function is to process the global counter and then make available the end result after each processing loop.
+ * A getter function would like to see:
+ *  - first fetch = end result of first process loop
+ *  - second fetch = end result of second process loop
+ *  - etc.
+ */
 void pTaskValueIncrementer_withMutex( void *pvParameters )
 {  
 	for( ;; )
@@ -384,15 +401,33 @@ void pTaskValueIncrementer_withMutex( void *pvParameters )
         {
 			uint16_t ui_current_increment_value = g_ui_mutex_example_counter;
 		
-			for(g_ui_mutex_example_counter = ui_current_increment_value ; g_ui_mutex_example_counter < ui_current_increment_value + 100 ; g_ui_mutex_example_counter += 1)
+			for(g_ui_mutex_example_counter = ui_current_increment_value ; g_ui_mutex_example_counter < ui_current_increment_value + 10 ; g_ui_mutex_example_counter += 1)
 			{
-				vTaskDelay(1); // simulate delay of processing
+				vTaskDelay(100); // simulate delay of processing
 			}
-			g_ui_index_for_list += 1; // used for accessing a list
+			
+            xSemaphoreGive(ListMutex); // place break point here
+            
+            /*
+             * At the first time this break point is hit the scheduler would have been running for 1000 ticks
+             * The Task pTaskValueGetter_withMutex would not have been able to run
+             * The Task pTaskValueGetter_withoutMutex would have run and would have stored the value 0 in position 0 (in non_mutexed_counter_list)
+             * 
+             * Step over this line and the Mutex (ListMutex) is released, but this currently running HIGH priority Task is still running, 
+             * the vTaskDelay below releases this task and the next highest priority task to run is pTaskValueGetter_withMutex (as it has not run yet); and 
+             * the Mutex (ListMutex) is now available for that task. That task now has access to g_ui_mutex_example_counter at the intended value from the 
+             * HIGH Priority task (10) and can insert it into position 0 of mutexed_counter_list
+             * 
+             * Once the vTaskDelay(1) is run then the pTaskValueGetter_withMutex task can run.
+             * 
+             * Therefore the Mutex was able to lock access to a global variable (g_ui_mutex_example_counter) until all processing had been complete, the Mutex Getter 
+             * (pTaskValueGetter_withMutex) shows how the intended value is stored once the Mutex (ListMutex) is available whereas the Non-Mutexed Getter 
+             * (pTaskValueGetter_withoutMutex) has access to the global variable (g_ui_mutex_example_counter) before processing has been completed.
+             */
+            vTaskDelay(1);
+            g_ui_index_for_list += 1; // used for accessing a list
 
-            xSemaphoreGive(ListMutex);
-
-            vTaskDelay(2000); // let this task happen every 2000 ticks
+            vTaskDelay(999); // let this task happen every 2000 ticks (100 * 10 ticks inside process loop, 1 tick above, plus 999 = 2000)
         }
 	}
 }
