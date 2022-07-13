@@ -89,6 +89,8 @@ void main_example_semaphore (void);
 void main_example_mutex(void);
 void main_example_mutex_extended(void);
 
+// Global Variables
+static uint16_t g_ui_mutex_example_counter = 0;
 
 /**
  * PRAC1_EXAMPLE_SIMPLE_TASK
@@ -303,7 +305,7 @@ void main_example_semaphore (void ){
 	
 }
 
-SemaphoreHandle_t LEDMutex;
+SemaphoreHandle_t LEDMutex; 
 
 /**
  * PRAC8_EXAMPLE_MUTEX
@@ -332,6 +334,8 @@ void main_example_mutex(void){
     /* Start the tasks . */
     vTaskStartScheduler();
 }
+
+SemaphoreHandle_t ListMutex;
 
 /**
  * PRAC9_EXAMPLE_MUTEX
@@ -369,6 +373,26 @@ void main_example_mutex_extended(void)
 
     /* Start the tasks . */
     vTaskStartScheduler();
+}
+
+void pTaskValueIncrementer_withMutex( void *pvParameters )
+{  
+	for( ;; )
+	{     
+        if ( xSemaphoreTake(ListMutex,portMAX_DELAY) == pdPASS)  /* we block here until there is a semaphore given to this sempahore */
+        {
+			uint16_t ui_current_increment_value = g_ui_mutex_example_counter;
+		
+			for(g_ui_mutex_example_counter = ui_current_increment_value ; g_ui_mutex_example_counter < ui_current_increment_value + 100 ; g_ui_mutex_example_counter += 1)
+			{
+				vTaskDelay(1); // simulate delay of processing
+			}
+
+            xSemaphoreGive(ListMutex);
+			
+            vTaskDelay(2000); // let this task happen every 2000 ticks
+        }
+	}
 }
 
 void pTaskFlashBlue_Mutexed( void *pvParameters )
