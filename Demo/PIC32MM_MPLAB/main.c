@@ -17,7 +17,8 @@
 #define PRAC5_EXAMPLE_TIMER          0
 #define PRAC6_EXAMPLE_QUEUE          0
 #define PRAC7_EXAMPLE_SEMAPHORE      0
-#define PRAC8_EXAMPLE_MUTEX          1
+#define PRAC8_EXAMPLE_MUTEX          0
+#define PRAC9_EXAMPLE_MUTEX	         1
 
 
 /*-----------------------------------------------------------*/
@@ -69,6 +70,10 @@ int main( void ) {
     #elif PRAC8_EXAMPLE_MUTEX == 1
     {
         main_example_mutex();
+    }
+	#elif PRAC9_EXAMPLE_MUTEX == 1
+    {
+        main_example_mutex_extended();
     }
     #else
         ##error PLEASE define at least one EXAMPLE
