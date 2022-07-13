@@ -89,10 +89,11 @@ void main_example_semaphore (void);
 void main_example_mutex(void);
 void main_example_mutex_extended(void);
 
-// Global Variables
+// Global Variables - for PRAC9
 static uint16_t g_ui_mutex_example_counter = 0;
 static uint16_t g_ui_index_for_list = 0;
-static uint16_t mutexed_counter_list[100];
+static uint16_t mutexed_counter_list[100]; 
+static uint16_t non_mutexed_counter_list[100]; 
 
 /**
  * PRAC1_EXAMPLE_SIMPLE_TASK
@@ -345,8 +346,6 @@ SemaphoreHandle_t ListMutex;
  */
 void main_example_mutex_extended(void)
 {
-
-
     DemoBoardLedInitialise();
     
     ListMutex = xSemaphoreCreateMutex();
@@ -410,6 +409,16 @@ void pTaskValueGetter_withMutex( void *pvParameters )
 			
             vTaskDelay(2000); // let this task happen every 2000 ticks
         }
+	}
+}
+
+void pTaskValueGetter_withoutMutex( void *pvParameters )
+{  
+	for( ;; )
+	{     
+		non_mutexed_counter_list[g_ui_index_for_list] = g_ui_mutex_example_counter; // capture the global counter value and populate into the list
+
+		vTaskDelay(2000); // let this task happen every 2000 ticks
 	}
 }
 
